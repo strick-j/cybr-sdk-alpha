@@ -1,0 +1,43 @@
+[default]
+domain = cyberark.cloud
+
+[profile    with-tab]
+domain = tab-1-cyberark.cloud
+
+[profile default]
+domain = def-cyberark.cloud
+
+[profile duplicate-profile]
+domain = dup-1-cyberark.cloud
+
+[profile duplicate-profile]
+domain = dup-2-cyberark.cloud
+
+[profile partial-creds-1]
+cybr_username = notForAccess
+
+[profile complete]
+cybr_username = configUsername
+cybr_password = configPassword
+domain = comp-cyberark.cloud
+
+[replaced-profile]
+domain = rep-cyberark.cloud
+
+[profile replaced-profile]
+domain = rep-cyberark.cloud
+
+[profile]
+domain = nm-cyberark.cloud
+
+[profile ]
+domain = spc-cyberark.cloud
+
+[profile    ]
+domain = tab-2-cyberark.cloud
+
+[profile-bar]
+domain = bar-cyberark.cloud
+
+[ignored-profile]
+domain = cyberark.cloud

@@ -1,0 +1,70 @@
+[default]
+region = default_subdomain
+
+[profile exampleProfile]
+subdomain = default_subdomain
+cybr_username = USERNAME
+cybr_password = PASSWORD
+
+[profile alt_profile_name]
+subdomain = alt_profile_name_subdomain
+
+[profile merged_profiles]
+subdomain = default_subdomain_config
+domain = default_domain_config
+
+[profile short_profile_name_first]
+subdomain = short_profile_name_first_short
+
+[profile short_profile_name_first]
+subdomain = short_profile_name_first_alt
+
+[profile partial_creds]
+cybr_username = partial_creds_username
+
+[profile complete_creds]
+cybr_username = complete_creds_username
+cybr_password = complete_creds_password
+
+[profile complete_creds_with_token]
+cybr_username = complete_creds_with_token_username
+cybr_password = complete_creds_with_token_password
+cybr_session_token = complete_creds_with_token_token
+
+[profile full_profile]
+cybr_username = full_profile_username
+cybr_password = full_profile_password
+subdomain = full_profile_subdomain
+
+[profile config_file_load_order]
+subdomain = shared_config_subdomain
+cybr_username = shared_config_username
+cybr_password = shared_config_password
+
+[profile with_mixed_case_keys]
+cYbR_UsErNaMe = username
+cYbR_PaSsWoRd = password
+
+[profile DoNotNormalize]
+cybr_username = DoNotNormalize_config_username
+cybr_password = DoNotNormalize_config_password
+cybr_session_token = DoNotNormalize_config_session_token
+
+[profile donotnormalize]
+cybr_username = donotnormalize_config_username
+cybr_password = donotnormalize_config_password
+cybr_session_token = donotnormalize_config_session_token
+
+[profile DONOTNORMALIZE]
+cybr_username = DONOTNORMALIZE_config_username
+cybr_password = DONOTNORMALIZE_config_password
+cybr_session_token = DONOTNORMALIZE_config_session_token
+
+[profile DoNotNormalize]
+subdomain = default_subdomain_1
+
+[profile donotnormalize]
+subdomain = default_subdomain_2
+
+[profile DONOTNORMALIZE]
+subdomain = default_subdomain_3

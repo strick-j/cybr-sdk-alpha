@@ -1,0 +1,17 @@
+[default]
+subdomain = default_subdomain
+
+[profile partial_creds]
+cybr_username = USERNAME
+
+[profile alt_profile_name]
+subdomain = alt_profile_name_subdomain
+
+[profile creds_from_credentials]
+cybr_username = creds_from_config_username
+cybr_password = creds_from_config_password
+
+[profile config_file_load_order]
+subdomain= shared_config_other_subdomain
+cybr_username = shared_config_other_username
+cybr_password = shared_config_other_password
