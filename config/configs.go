@@ -23,8 +23,6 @@ var defaultCYBRConfigResolvers = []cybrConfigResolver{
 	resolveHTTPClient,
 
 	resolveAPIOptions,
-
-	resolveCredentials,
 }
 
 // A Config represents a generic configuration value or set of values. This type

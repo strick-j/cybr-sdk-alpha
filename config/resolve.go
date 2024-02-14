@@ -146,3 +146,19 @@ func resolveHTTPClient(ctx context.Context, cfg *cybr.Config, configs configs) e
 	cfg.HTTPClient = c
 	return nil
 }
+
+// resolveAPIOptions extracts the first instance of APIOptions and sets `aws.Config.APIOptions` to the resolved API options
+// if one has not been resolved from other sources.
+func resolveAPIOptions(ctx context.Context, cfg *cybr.Config, configs configs) error {
+	o, found, err := getAPIOptions(ctx, configs)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return nil
+	}
+
+	cfg.APIOptions = o
+
+	return nil
+}
