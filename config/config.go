@@ -12,11 +12,22 @@ var defaultCYBRConfigResolvers = []cybrConfigResolver{
 
 	resolveDomain,
 
+	resolveDefaultDomain,
+
+	resolveDefaultSubdomain,
+
 	// Sets the logger to be used. Could be user provided logger, and client
 	// logging mode.
 	resolveLogger,
 
 	resolveClientLogMode,
+
+	// Sets the endpoint resolving behavior the API Clients will use for making
+	// requests to. Clients default to their own clients this allows overrides
+	// to be specified. The resolveEndpointResolver option is deprecated, but
+	// we still need to set it for backwards compatibility on config
+	// construction.
+	resolveEndpointResolverWithOptions,
 
 	// Sets the HTTP client and configuration to use for making requests using
 	// the HTTP transport.

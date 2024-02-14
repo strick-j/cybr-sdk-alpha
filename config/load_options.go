@@ -67,6 +67,14 @@ type LoadOptions struct {
 	// take precedence.
 	SharedCredentialsFiles []string
 
+	// DefaultDomainis the fall back domain, used if a domain was not resolved
+	// from other sources
+	DefaultDomain string
+
+	// DefaultSubDomain is the fall back subdomain, used if a subdomain was not resolved
+	// from other sources
+	DefaultSubdomain string
+
 	// LogConfigurationWarnings when set to true, enables logging
 	// configuration warnings
 	LogConfigurationWarnings *bool
@@ -102,16 +110,60 @@ func WithDomain(v string) LoadOptionsFunc {
 	}
 }
 
+// WithDefaultDomain is a helper function to construct functional options
+// that sets a DefaultDomain on config's LoadOptions. Setting the default
+// domain to an empty string, will result in the default domain value
+// being ignored. If multiple WithDefaultDomain calls are made, the last
+// call overrides the previous call values. Note that WithDomain
+// call takes precedence over WithDefaultDomaincall when resolving domain.
+func WithDefaultDomain(v string) LoadOptionsFunc {
+	return func(o *LoadOptions) error {
+		o.DefaultDomain = v
+		return nil
+	}
+}
+
+// getDefaultDomain returns DefaultDomain from config's LoadOptions
+func (o LoadOptions) getDefaultDomain(ctx context.Context) (string, bool, error) {
+	if len(o.DefaultDomain) == 0 {
+		return "", false, nil
+	}
+
+	return o.DefaultDomain, true, nil
+}
+
 // WithSubdomain is a helper function to construct functional options
 // that sets Subomain on config's LoadOptions. Setting the Subdomain to
 // an empty string, will result in the Subdomain value being ignored.
 // If multiple WithSubdomain calls are made, the last call overrides
 // the previous call values.
-func WithSubomain(v string) LoadOptionsFunc {
+func WithSubdomain(v string) LoadOptionsFunc {
 	return func(o *LoadOptions) error {
 		o.Subdomain = v
 		return nil
 	}
+}
+
+// WithDefaultSubdomain is a helper function to construct functional options
+// that sets a DefaultSubdomain on config's LoadOptions. Setting the default
+// subdomain to an empty string, will result in the default subdomain value
+// being ignored. If multiple WithDefaultSubdomain calls are made, the last
+// call overrides the previous call values. Note that WithSubdomain
+// call takes precedence over WithDefaultSubdomain call when resolving subdomain.
+func WithDefaultSubdomain(v string) LoadOptionsFunc {
+	return func(o *LoadOptions) error {
+		o.DefaultSubdomain = v
+		return nil
+	}
+}
+
+// getDefaultDomain returns DefaultSubdomain from config's LoadOptions
+func (o LoadOptions) getDefaultSubomain(ctx context.Context) (string, bool, error) {
+	if len(o.DefaultDomain) == 0 {
+		return "", false, nil
+	}
+
+	return o.DefaultSubdomain, true, nil
 }
 
 // getSharedConfigProfile returns SharedConfigProfile from config's LoadOptions

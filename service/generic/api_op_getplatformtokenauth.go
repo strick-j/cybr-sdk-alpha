@@ -2,6 +2,7 @@ package generic
 
 import (
 	"context"
+	"fmt"
 
 	cybrmiddleware "github.com/strick-j/cybr-sdk-alpha/cybr/middleware"
 	"github.com/strick-j/smithy-go/middleware"
@@ -53,6 +54,9 @@ func (c *Client) addOperationGetPlatformTokenMiddleware(stack *middleware.Stack,
 	err = stack.Deserialize.Add(&cybrQuery_deserializeOpGetPlatformToken{}, middleware.After)
 	if err != nil {
 		return err
+	}
+	if err := addProtocolFinalizerMiddlewares(stack, options, "GetPlatformToken"); err != nil {
+		return fmt.Errorf("add protocol finalizers: %v", err)
 	}
 
 	if err = addSetLoggerMiddleware(stack, options); err != nil {

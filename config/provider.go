@@ -74,6 +74,27 @@ func getSharedCredentialsFiles(ctx context.Context, configs configs) (value []st
 	return
 }
 
+// credentialsProviderProvider provides access to the credentials external
+// configuration value.
+type credentialsProviderProvider interface {
+	getCredentialsProvider(ctx context.Context) (cybr.CredentialsProvider, bool, error)
+}
+
+// getCredentialsProvider searches the configs for a credentialsProviderProvider
+// and returns the value if found. Returns an error if a provider fails before a
+// value is found.
+func getCredentialsProvider(ctx context.Context, configs configs) (p cybr.CredentialsProvider, found bool, err error) {
+	for _, cfg := range configs {
+		if provider, ok := cfg.(credentialsProviderProvider); ok {
+			p, found, err = provider.getCredentialsProvider(ctx)
+			if err != nil || found {
+				break
+			}
+		}
+	}
+	return
+}
+
 // defaultSubdomainProvider is an interface for retrieving a default subdomain if a subdomain was not resolved from other sources
 type defaultSubdomainProvider interface {
 	getDefaultSubdomain(ctx context.Context) (string, bool, error)
@@ -140,6 +161,41 @@ func getDomain(ctx context.Context, configs configs) (value string, found bool, 
 	for _, cfg := range configs {
 		if p, ok := cfg.(domainProvider); ok {
 			value, found, err = p.getDomain(ctx)
+			if err != nil || found {
+				break
+			}
+		}
+	}
+	return
+}
+
+type servicesObjectProvider interface {
+	getServicesObject(ctx context.Context) (map[string]map[string]string, bool, error)
+}
+
+func getServicesObject(ctx context.Context, configs configs) (value map[string]map[string]string, found bool, err error) {
+	for _, cfg := range configs {
+		if p, ok := cfg.(servicesObjectProvider); ok {
+			value, found, err = p.getServicesObject(ctx)
+			if err != nil || found {
+				break
+			}
+		}
+	}
+	return
+}
+
+// endpointResolverWithOptionsProvider is an interface for retrieving an aws.EndpointResolverWithOptions from a configuration source
+type endpointResolverWithOptionsProvider interface {
+	getEndpointResolverWithOptions(ctx context.Context) (cybr.EndpointResolverWithOptions, bool, error)
+}
+
+// getEndpointResolver searches the provided config sources for a EndpointResolverFunc that can be used
+// to configure the aws.Config.EndpointResolver value.
+func getEndpointResolverWithOptions(ctx context.Context, configs configs) (f cybr.EndpointResolverWithOptions, found bool, err error) {
+	for _, c := range configs {
+		if p, ok := c.(endpointResolverWithOptionsProvider); ok {
+			f, found, err = p.getEndpointResolverWithOptions(ctx)
 			if err != nil || found {
 				break
 			}

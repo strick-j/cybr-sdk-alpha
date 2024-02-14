@@ -30,6 +30,10 @@ type Options struct {
 	// Configures the events that will be sent to the configured logger.
 	ClientLogMode cybr.ClientLogMode
 
+	// Resolves the endpoint used for a particular service operation. This should be
+	// used over the deprecated EndpointResolver.
+	EndpointResolverV2 EndpointResolverV2
+
 	// The HTTP client to invoke API calls with. Defaults to client's default HTTP
 	// implementation if nil.
 	HTTPClient HTTPClient
@@ -42,4 +46,20 @@ func (o Options) Copy() Options {
 	copy(to.APIOptions, o.APIOptions)
 
 	return to
+}
+
+// WithAPIOptions returns a functional option for setting the Client's APIOptions
+// option.
+func WithAPIOptions(optFns ...func(*middleware.Stack) error) func(*Options) {
+	return func(o *Options) {
+		o.APIOptions = append(o.APIOptions, optFns...)
+	}
+}
+
+// WithEndpointResolverV2 returns a functional option for setting the Client's
+// EndpointResolverV2 option.
+func WithEndpointResolverV2(v EndpointResolverV2) func(*Options) {
+	return func(o *Options) {
+		o.EndpointResolverV2 = v
+	}
 }

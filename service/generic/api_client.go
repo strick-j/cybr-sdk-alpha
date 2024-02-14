@@ -2,6 +2,7 @@ package generic
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/strick-j/cybr-sdk-alpha/cybr"
 	cybrmiddleware "github.com/strick-j/cybr-sdk-alpha/cybr/middleware"
@@ -26,6 +27,8 @@ func New(options Options, optFns ...func(*Options)) *Client {
 	options = options.Copy()
 
 	resolveDefaultLogger(&options)
+
+	resolveEndpointResolverV2(&options)
 
 	resolveHTTPClient(&options)
 
@@ -101,6 +104,13 @@ func (m *setOperationInputMiddleware) HandleSerialize(ctx context.Context, in mi
 	return next.HandleSerialize(ctx, in)
 }
 
+func addProtocolFinalizerMiddlewares(stack *middleware.Stack, options Options, operation string) error {
+	if err := stack.Finalize.Insert(&resolveEndpointV2Middleware{options: options}, "GetIdentity", middleware.After); err != nil {
+		return fmt.Errorf("add ResolveEndpointV2: %v", err)
+	}
+	return nil
+}
+
 func resolveDefaultLogger(o *Options) {
 	if o.Logger != nil {
 		return
@@ -130,10 +140,12 @@ func resolveHTTPClient(o *Options) {
 
 func NewFromConfig(cfg cybr.Config, optFns ...func(*Options)) *Client {
 	opts := Options{
-		Domain:     cfg.Domain,
-		Subdomain:  cfg.SubDomain,
-		HTTPClient: cfg.HTTPClient,
-		Logger:     cfg.Logger,
+		Domain:        cfg.Domain,
+		Subdomain:     cfg.SubDomain,
+		HTTPClient:    cfg.HTTPClient,
+		APIOptions:    cfg.APIOptions,
+		Logger:        cfg.Logger,
+		ClientLogMode: cfg.ClientLogMode,
 	}
 	return New(opts, optFns...)
 }

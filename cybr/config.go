@@ -27,6 +27,13 @@ type Config struct {
 	// sources, and resolve credentials using the SDK's default credential chain.
 	Credentials CredentialsProvider
 
+	// An endpoint resolver that can be used to provide or override an endpoint
+	// for the given service and region.
+	//
+	// See the `cybr.EndpointResolverWithOptions` documentation for additional
+	// usage information.
+	EndpointResolverWithOptions EndpointResolverWithOptions
+
 	// ConfigSources are the sources that were used to construct the Config.
 	// Allows for additional configuration to be loaded by clients.
 	ConfigSources []interface{}
