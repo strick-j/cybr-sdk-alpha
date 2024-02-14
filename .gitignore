@@ -24,3 +24,5 @@ build/
 bin/
 .vscode/
 /vendor
+
+.DD_Store
