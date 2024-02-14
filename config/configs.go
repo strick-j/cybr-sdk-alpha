@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"os"
 
 	"github.com/strick-j/cybr-sdk-alpha/cybr"
 )
@@ -15,9 +16,15 @@ var defaultCYBRConfigResolvers = []cybrConfigResolver{
 	// logging mode.
 	resolveLogger,
 
+	resolveClientLogMode,
+
 	// Sets the HTTP client and configuration to use for making requests using
 	// the HTTP transport.
 	resolveHTTPClient,
+
+	resolveAPIOptions,
+
+	resolveCredentials,
 }
 
 // A Config represents a generic configuration value or set of values. This type
@@ -98,4 +105,42 @@ func (cs configs) ResolveConfig(f func(configs []interface{}) error) error {
 		cfgs = append(cfgs, cs[i])
 	}
 	return f(cfgs)
+}
+
+func LoadDefaultConfig(ctx context.Context, optFns ...func(*LoadOptions) error) (cfg cybr.Config, err error) {
+	var options LoadOptions
+	for _, optFn := range optFns {
+		if err := optFn(&options); err != nil {
+			return cybr.Config{}, err
+		}
+	}
+
+	// assign Load Options to configs
+	var cfgCpy = configs{options}
+
+	cfgCpy, err = cfgCpy.AppendFromLoaders(ctx, resolveConfigLoaders(&options))
+	if err != nil {
+		return cybr.Config{}, err
+	}
+
+	cfg, err = cfgCpy.ResolveCYBRConfig(ctx, defaultCYBRConfigResolvers)
+	if err != nil {
+		return cybr.Config{}, err
+	}
+
+	return cfg, nil
+}
+
+func resolveConfigLoaders(options *LoadOptions) []loader {
+	loaders := make([]loader, 2)
+	loaders[0] = loadEnvConfig
+
+	// specification of a profile should cause a load failure if it doesn't exist
+	if os.Getenv(cybrProfileEnvVar) != "" || options.SharedConfigProfile != "" {
+		loaders[1] = loadSharedConfig
+	} else {
+		loaders[1] = loadSharedConfigIgnoreNotExist
+	}
+
+	return loaders
 }

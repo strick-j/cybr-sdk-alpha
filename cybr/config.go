@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/strick-j/smithy-go/logging"
+	"github.com/strick-j/smithy-go/middleware"
 )
 
 // HTTPClient provides the interface to provide custom HTTPClients. Generally
@@ -29,6 +30,11 @@ type Config struct {
 	// ConfigSources are the sources that were used to construct the Config.
 	// Allows for additional configuration to be loaded by clients.
 	ConfigSources []interface{}
+
+	// APIOptions provides the set of middleware mutations modify how the API
+	// client requests will be handled. This is useful for adding additional
+	// tracing data to a request, or changing behavior of the SDK's client.
+	APIOptions []func(*middleware.Stack) error
 
 	// The logger writer interface to write logging messages to. Defaults to
 	// standard error.

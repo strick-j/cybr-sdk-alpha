@@ -26,6 +26,26 @@ func resolveDefaultCYBRConfig(ctx context.Context, cfg *cybr.Config, cfgs config
 	return nil
 }
 
+// resolveDefaultSubdomain extracts the first instance of a Subdomain and sets `cybr.Config.Subdomain` to the
+// default Subdomain if domain had not been resolved from other sources.
+func resolveDefaultSubdomain(ctx context.Context, cfg *cybr.Config, configs configs) error {
+	if len(cfg.Domain) > 0 {
+		return nil
+	}
+
+	v, found, err := getDefaultSubdomain(ctx, configs)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return nil
+	}
+
+	cfg.SubDomain = v
+
+	return nil
+}
+
 // resolveSubdomain extracts the first instance of a Subdomain from the configs slice.
 //
 // Config providers used:
@@ -42,6 +62,26 @@ func resolveSubdomain(ctx context.Context, cfg *cybr.Config, configs configs) er
 	}
 
 	cfg.SubDomain = v
+	return nil
+}
+
+// resolveDefaultDomain extracts the first instance of a Domain and sets `cybr.Config.Domain` to the
+// default domain if domain had not been resolved from other sources.
+func resolveDefaultDomain(ctx context.Context, cfg *cybr.Config, configs configs) error {
+	if len(cfg.Domain) > 0 {
+		return nil
+	}
+
+	v, found, err := getDefaultDomain(ctx, configs)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return nil
+	}
+
+	cfg.Domain = v
+
 	return nil
 }
 

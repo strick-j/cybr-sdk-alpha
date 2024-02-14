@@ -6,6 +6,7 @@ import (
 
 	"github.com/strick-j/cybr-sdk-alpha/cybr"
 	"github.com/strick-j/smithy-go/logging"
+	"github.com/strick-j/smithy-go/middleware"
 )
 
 // sharedConfigProfileProvider provides access to the shared config profile
@@ -73,6 +74,24 @@ func getSharedCredentialsFiles(ctx context.Context, configs configs) (value []st
 	return
 }
 
+// defaultSubdomainProvider is an interface for retrieving a default subdomain if a subdomain was not resolved from other sources
+type defaultSubdomainProvider interface {
+	getDefaultSubdomain(ctx context.Context) (string, bool, error)
+}
+
+// getDefaultSubdomain searches the slice of configs and returns the first fallback subdomain found
+func getDefaultSubdomain(ctx context.Context, configs configs) (value string, found bool, err error) {
+	for _, config := range configs {
+		if p, ok := config.(defaultSubdomainProvider); ok {
+			value, found, err = p.getDefaultSubdomain(ctx)
+			if err != nil || found {
+				break
+			}
+		}
+	}
+	return
+}
+
 // subdomainProvider provides access to the subdomain external configuration value.
 type subdomainProvider interface {
 	getSubdomain(ctx context.Context) (string, bool, error)
@@ -84,6 +103,24 @@ func getSubdomain(ctx context.Context, configs configs) (value string, found boo
 	for _, cfg := range configs {
 		if p, ok := cfg.(subdomainProvider); ok {
 			value, found, err = p.getSubdomain(ctx)
+			if err != nil || found {
+				break
+			}
+		}
+	}
+	return
+}
+
+// defaultDomainProvider is an interface for retrieving a default domain if a domain was not resolved from other sources
+type defaultDomainProvider interface {
+	getDefaultDomain(ctx context.Context) (string, bool, error)
+}
+
+// getDefaultDomain searches the slice of configs and returns the first fallback domain found
+func getDefaultDomain(ctx context.Context, configs configs) (value string, found bool, err error) {
+	for _, config := range configs {
+		if p, ok := config.(defaultDomainProvider); ok {
+			value, found, err = p.getDefaultDomain(ctx)
 			if err != nil || found {
 				break
 			}
@@ -180,6 +217,25 @@ func getLogConfigurationWarnings(ctx context.Context, configs configs) (v bool, 
 	for _, c := range configs {
 		if p, ok := c.(logConfigurationWarningsProvider); ok {
 			v, found, err = p.getLogConfigurationWarnings(ctx)
+			if err != nil || found {
+				break
+			}
+		}
+	}
+	return
+}
+
+// apiOptionsProvider is an interface for retrieving APIOptions
+type apiOptionsProvider interface {
+	getAPIOptions(ctx context.Context) ([]func(*middleware.Stack) error, bool, error)
+}
+
+// getAPIOptions searches the slice of configs and returns the APIOptions set on configs
+func getAPIOptions(ctx context.Context, configs configs) (apiOptions []func(*middleware.Stack) error, found bool, err error) {
+	for _, config := range configs {
+		if p, ok := config.(apiOptionsProvider); ok {
+			// retrieve APIOptions from configs and set it on cfg
+			apiOptions, found, err = p.getAPIOptions(ctx)
 			if err != nil || found {
 				break
 			}
