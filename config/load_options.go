@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/strick-j/cybr-sdk-alpha/cybr"
-	"github.com/strick-j/cybr-sdk-alpha/cybr/logging"
+	"github.com/strick-j/smithy-go/logging"
 )
 
 // LoadOptionsFunc is a type alias for LoadOptions functional option

@@ -4,7 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/strick-j/cybr-sdk-alpha/cybr/logging"
+	"github.com/strick-j/cybr-sdk-alpha/cybr"
+	"github.com/strick-j/smithy-go/logging"
 )
 
 // sharedConfigProfileProvider provides access to the shared config profile
@@ -121,6 +122,23 @@ func getLogger(ctx context.Context, configs configs) (l logging.Logger, found bo
 	for _, c := range configs {
 		if p, ok := c.(loggerProvider); ok {
 			l, found, err = p.getLogger(ctx)
+			if err != nil || found {
+				break
+			}
+		}
+	}
+	return
+}
+
+// clientLogModeProvider is an interface for retrieving the aws.ClientLogMode from a configuration source.
+type clientLogModeProvider interface {
+	getClientLogMode(ctx context.Context) (cybr.ClientLogMode, bool, error)
+}
+
+func getClientLogMode(ctx context.Context, configs configs) (m cybr.ClientLogMode, found bool, err error) {
+	for _, c := range configs {
+		if p, ok := c.(clientLogModeProvider); ok {
+			m, found, err = p.getClientLogMode(ctx)
 			if err != nil || found {
 				break
 			}

@@ -12,8 +12,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/strick-j/cybr-sdk-alpha/cybr"
-	"github.com/strick-j/cybr-sdk-alpha/cybr/logging"
 	"github.com/strick-j/cybr-sdk-alpha/internal/ini"
+	"github.com/strick-j/smithy-go/logging"
 )
 
 var _ subdomainProvider = (*SharedConfig)(nil)

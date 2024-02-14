@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/strick-j/cybr-sdk-alpha/cybr"
-	"github.com/strick-j/cybr-sdk-alpha/cybr/logging"
+	"github.com/strick-j/smithy-go/logging"
 )
 
 // resolveDefaultCYBRConfig will write default configuration values into the cfg
@@ -74,6 +74,20 @@ func resolveLogger(ctx context.Context, cfg *cybr.Config, configs configs) error
 	}
 
 	cfg.Logger = logger
+
+	return nil
+}
+
+func resolveClientLogMode(ctx context.Context, cfg *cybr.Config, configs configs) error {
+	mode, found, err := getClientLogMode(ctx, configs)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return nil
+	}
+
+	cfg.ClientLogMode = mode
 
 	return nil
 }

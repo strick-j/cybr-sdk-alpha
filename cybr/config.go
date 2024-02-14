@@ -3,7 +3,7 @@ package cybr
 import (
 	"net/http"
 
-	"github.com/strick-j/cybr-sdk-alpha/cybr/logging"
+	"github.com/strick-j/smithy-go/logging"
 )
 
 // HTTPClient provides the interface to provide custom HTTPClients. Generally

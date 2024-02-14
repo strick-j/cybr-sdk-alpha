@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/strick-j/cybr-sdk-alpha/cybr"
-	"github.com/strick-j/cybr-sdk-alpha/cybr/logging"
 	"github.com/strick-j/cybr-sdk-alpha/internal/ini"
 	"github.com/strick-j/cybr-sdk-alpha/internal/shareddefaults"
+	"github.com/strick-j/smithy-go/logging"
 )
 
 const (
