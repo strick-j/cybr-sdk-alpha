@@ -30,6 +30,18 @@ type Options struct {
 	// Configures the events that will be sent to the configured logger.
 	ClientLogMode cybr.ClientLogMode
 
+	// The endpoint options to be used when attempting to resolve an endpoint.
+	EndpointOptions EndpointResolverOptions
+
+	// The service endpoint resolver.
+	//
+	// Deprecated: Deprecated: EndpointResolver and WithEndpointResolver. Providing a
+	// value for this field will likely prevent you from using any endpoint-related
+	// service features released after the introduction of EndpointResolverV2 and
+	// BaseEndpoint. To migrate an EndpointResolver implementation that uses a custom
+	// endpoint, set the client option BaseEndpoint instead.
+	EndpointResolver EndpointResolver
+
 	// Resolves the endpoint used for a particular service operation. This should be
 	// used over the deprecated EndpointResolver.
 	EndpointResolverV2 EndpointResolverV2

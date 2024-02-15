@@ -2,17 +2,154 @@ package generic
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/strick-j/cybr-sdk-alpha/cybr"
+	cybrmiddleware "github.com/strick-j/cybr-sdk-alpha/cybr/middleware"
+	internalendpoints "github.com/strick-j/cybr-sdk-alpha/service/generic/internal"
 	smithyendpoints "github.com/strick-j/smithy-go/endpoints"
 	middleware "github.com/strick-j/smithy-go/middleware"
 	"github.com/strick-j/smithy-go/ptr"
 	smithyhttp "github.com/strick-j/smithy-go/transport/http"
 )
+
+// EndpointResolverOptions is the service endpoint resolver options
+type EndpointResolverOptions = internalendpoints.Options
+
+// EndpointResolver interface for resolving service endpoints.
+type EndpointResolver interface {
+	ResolveEndpoint(subdomain, domain string, options EndpointResolverOptions) (cybr.Endpoint, error)
+}
+
+var _ EndpointResolver = &internalendpoints.Resolver{}
+
+// NewDefaultEndpointResolver constructs a new service endpoint resolver
+func NewDefaultEndpointResolver() *internalendpoints.Resolver {
+	return internalendpoints.New()
+}
+
+// EndpointResolverFunc is a helper utility that wraps a function so it satisfies
+// the EndpointResolver interface. This is useful when you want to add additional
+// endpoint resolving logic, or stub out specific endpoints with custom values.
+type EndpointResolverFunc func(subdomain, domain string, options EndpointResolverOptions) (cybr.Endpoint, error)
+
+func (fn EndpointResolverFunc) ResolveEndpoint(subdomain, domain string, options EndpointResolverOptions) (endpoint cybr.Endpoint, err error) {
+	return fn(subdomain, domain, options)
+}
+
+// EndpointResolverFromURL returns an EndpointResolver configured using the
+// provided endpoint url. By default, the resolved endpoint resolver uses the
+// client region as signing region, and the endpoint source is set to
+// EndpointSourceCustom.You can provide functional options to configure endpoint
+// values for the resolved endpoint.
+func EndpointResolverFromURL(url string, optFns ...func(*cybr.Endpoint)) EndpointResolver {
+	e := cybr.Endpoint{URL: url, Source: cybr.EndpointSourceCustom}
+	for _, fn := range optFns {
+		fn(&e)
+	}
+
+	return EndpointResolverFunc(
+		func(subdomain, domain string, options EndpointResolverOptions) (cybr.Endpoint, error) {
+			return e, nil
+		},
+	)
+}
+
+type ResolveEndpoint struct {
+	Resolver EndpointResolver
+	Options  EndpointResolverOptions
+}
+
+func (*ResolveEndpoint) ID() string {
+	return "ResolveEndpoint"
+}
+
+func (m *ResolveEndpoint) HandleSerialize(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (
+	out middleware.SerializeOutput, metadata middleware.Metadata, err error,
+) {
+	req, ok := in.Request.(*smithyhttp.Request)
+	if !ok {
+		return out, metadata, fmt.Errorf("unknown transport type %T", in.Request)
+	}
+
+	if m.Resolver == nil {
+		return out, metadata, fmt.Errorf("expected endpoint resolver to not be nil")
+	}
+
+	eo := m.Options
+	eo.Logger = middleware.GetLogger(ctx)
+
+	var endpoint cybr.Endpoint
+	endpoint, err = m.Resolver.ResolveEndpoint(cybrmiddleware.GetSubdomain(ctx), cybrmiddleware.GetDomain(ctx), eo)
+	if err != nil {
+		nf := (&cybr.EndpointNotFoundError{})
+		if errors.As(err, &nf) {
+			return next.HandleSerialize(ctx, in)
+		}
+		return out, metadata, fmt.Errorf("failed to resolve service endpoint, %w", err)
+	}
+
+	req.URL, err = url.Parse(endpoint.URL)
+	if err != nil {
+		return out, metadata, fmt.Errorf("failed to parse endpoint URL: %w", err)
+	}
+
+	ctx = cybrmiddleware.SetEndpointSource(ctx, endpoint.Source)
+	ctx = smithyhttp.SetHostnameImmutable(ctx, endpoint.HostnameImmutable)
+	ctx = cybrmiddleware.SetPartitionID(ctx, endpoint.PartitionID)
+	return next.HandleSerialize(ctx, in)
+}
+func addResolveEndpointMiddleware(stack *middleware.Stack, o Options) error {
+	return stack.Serialize.Insert(&ResolveEndpoint{
+		Resolver: o.EndpointResolver,
+		Options:  o.EndpointOptions,
+	}, "OperationSerializer", middleware.Before)
+}
+
+func removeResolveEndpointMiddleware(stack *middleware.Stack) error {
+	_, err := stack.Serialize.Remove((&ResolveEndpoint{}).ID())
+	return err
+}
+
+type wrappedEndpointResolver struct {
+	cybrResolver cybr.EndpointResolverWithOptions
+}
+
+func (w *wrappedEndpointResolver) ResolveEndpoint(subdomain, domain string, options EndpointResolverOptions) (endpoint cybr.Endpoint, err error) {
+	return w.cybrResolver.ResolveEndpoint(subdomain, ServiceID, domain, options)
+}
+
+type cybrEndpointResolverAdaptor func(subdomain, service, domain string) (cybr.Endpoint, error)
+
+func (a cybrEndpointResolverAdaptor) ResolveEndpoint(subdomain, service, domain string, options ...interface{}) (cybr.Endpoint, error) {
+	return a(subdomain, service, domain)
+}
+
+var _ cybr.EndpointResolverWithOptions = cybrEndpointResolverAdaptor(nil)
+
+// withEndpointResolver returns an aws.EndpointResolverWithOptions that first delegates endpoint resolution to the awsResolver.
+// If awsResolver returns aws.EndpointNotFoundError error, the v1 resolver middleware will swallow the error,
+// and set an appropriate context flag such that fallback will occur when EndpointResolverV2 is invoked
+// via its middleware.
+//
+// If another error (besides aws.EndpointNotFoundError) is returned, then that error will be propagated.
+func withEndpointResolver(cybrResolver cybr.EndpointResolver, cybrResolverWithOptions cybr.EndpointResolverWithOptions) EndpointResolver {
+	var resolver cybr.EndpointResolverWithOptions
+
+	if cybrResolverWithOptions != nil {
+		resolver = cybrResolverWithOptions
+	} else if cybrResolver != nil {
+		resolver = cybrEndpointResolverAdaptor(cybrResolver.ResolveEndpoint)
+	}
+
+	return &wrappedEndpointResolver{
+		cybrResolver: resolver,
+	}
+}
 
 func resolveEndpointResolverV2(options *Options) {
 	if options.EndpointResolverV2 == nil {

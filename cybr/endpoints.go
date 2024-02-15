@@ -32,6 +32,9 @@ type Endpoint struct {
 	// API Client's Options.
 	HostnameImmutable bool
 
+	// The CYBR partition the endpoint belongs to.
+	PartitionID string
+
 	// The source of the Endpoint. By default, this will be EndpointSourceServiceMetadata.
 	// When providing a custom endpoint, you should set the source as EndpointSourceCustom.
 	// If source is not provided when providing a custom endpoint, the SDK may not
@@ -54,7 +57,7 @@ const (
 
 // EndpointNotFoundError is a sentinel error to indicate that the
 // EndpointResolver implementation was unable to resolve an endpoint for the
-// given service and region. Resolvers should use this to indicate that an API
+// given service and domain. Resolvers should use this to indicate that an API
 // client should fallback and attempt to use it's internal default resolver to
 // resolve the endpoint.
 type EndpointNotFoundError struct {
@@ -71,8 +74,32 @@ func (e *EndpointNotFoundError) Unwrap() error {
 	return e.Err
 }
 
+// EndpointResolver is an endpoint resolver that can be used to provide or
+// override an endpoint for the given service and domain. API clients will
+// attempt to use the EndpointResolver first to resolve an endpoint if
+// available. If the EndpointResolver returns an EndpointNotFoundError error,
+// API clients will fallback to attempting to resolve the endpoint using its
+// internal default endpoint resolver.
+//
+// Deprecated: See EndpointResolverWithOptions
+type EndpointResolver interface {
+	ResolveEndpoint(subdomain, service, domain string) (Endpoint, error)
+}
+
+// EndpointResolverFunc wraps a function to satisfy the EndpointResolver interface.
+//
+// Deprecated: See EndpointResolverWithOptionsFunc
+type EndpointResolverFunc func(subdomain, service, domain string) (Endpoint, error)
+
+// ResolveEndpoint calls the wrapped function and returns the results.
+//
+// Deprecated: See EndpointResolverWithOptions.ResolveEndpoint
+func (e EndpointResolverFunc) ResolveEndpoint(subdomain, service, domain string) (Endpoint, error) {
+	return e(subdomain, service, domain)
+}
+
 // EndpointResolverWithOptions is an endpoint resolver that can be used to provide or
-// override an endpoint for the given service, region, and the service client's EndpointOptions. API clients will
+// override an endpoint for the given service, domain, and the service client's EndpointOptions. API clients will
 // attempt to use the EndpointResolverWithOptions first to resolve an endpoint if
 // available. If the EndpointResolverWithOptions returns an EndpointNotFoundError error,
 // API clients will fallback to attempting to resolve the endpoint using its

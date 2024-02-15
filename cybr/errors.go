@@ -1,9 +1,17 @@
 package cybr
 
-// MissingSubDomainError is an error that is returned if Sub Domain configuration
+// MissingSubdomainError is an error that is returned if Subdomain configuration
 // value was not found.
-type MissingSubDomainError struct{}
+type MissingSubdomainError struct{}
 
-func (*MissingSubDomainError) Error() string {
-	return "a CyberArk Sub Domain is required, but was not found"
+func (*MissingSubdomainError) Error() string {
+	return "a CyberArk Subdomain is required, but was not found"
+}
+
+// MissingDomainError is an error that is returned if Domain configuration
+// value was not found.
+type MissingDomainError struct{}
+
+func (*MissingDomainError) Error() string {
+	return "a CyberArk Domain is required, but was not found"
 }

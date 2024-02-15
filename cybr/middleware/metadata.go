@@ -147,3 +147,17 @@ func GetSigningCredentials(ctx context.Context) (v cybr.Credentials) {
 func SetSigningCredentials(ctx context.Context, value cybr.Credentials) context.Context {
 	return middleware.WithStackValue(ctx, signingCredentialsKey{}, value)
 }
+
+// EndpointSource key
+type endpointSourceKey struct{}
+
+// GetEndpointSource returns an endpoint source if set on context
+func GetEndpointSource(ctx context.Context) (v cybr.EndpointSource) {
+	v, _ = middleware.GetStackValue(ctx, endpointSourceKey{}).(cybr.EndpointSource)
+	return v
+}
+
+// SetEndpointSource sets endpoint source on context
+func SetEndpointSource(ctx context.Context, value cybr.EndpointSource) context.Context {
+	return middleware.WithStackValue(ctx, endpointSourceKey{}, value)
+}

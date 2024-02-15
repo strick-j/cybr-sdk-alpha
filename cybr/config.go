@@ -30,6 +30,15 @@ type Config struct {
 	// An endpoint resolver that can be used to provide or override an endpoint
 	// for the given service and region.
 	//
+	// See the `aws.EndpointResolver` documentation for additional usage
+	// information.
+	//
+	// Deprecated: See Config.EndpointResolverWithOptions
+	EndpointResolver EndpointResolver
+
+	// An endpoint resolver that can be used to provide or override an endpoint
+	// for the given service and region.
+	//
 	// See the `cybr.EndpointResolverWithOptions` documentation for additional
 	// usage information.
 	EndpointResolverWithOptions EndpointResolverWithOptions
