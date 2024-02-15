@@ -68,6 +68,9 @@ func (c *Client) addOperationGetPlatformTokenMiddleware(stack *middleware.Stack,
 	if err = smithyhttp.AddComputeContentLengthMiddleware(stack); err != nil {
 		return err
 	}
+	if err = addResolveEndpointMiddleware(stack, options); err != nil {
+		return err
+	}
 	if err = cybrmiddleware.AddRawResponseToMetadata(stack); err != nil {
 		return err
 	}
